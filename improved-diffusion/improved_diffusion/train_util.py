@@ -102,7 +102,7 @@ class TrainLoop:
             ]
 
         if th.cuda.is_available(): # DEBUG **
-            self.use_ddp = True
+            self.use_ddp = False
             self.ddp_model = DataParallel(
                 self.model,
                 device_ids=[range(torch.cuda.device_count())],
