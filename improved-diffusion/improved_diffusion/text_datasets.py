@@ -17,6 +17,7 @@ from itertools import chain
 def load_data_text(
     *, data_dir, batch_size, image_size, class_cond=False, deterministic=False, data_args=None, 
         task_mode='roc', model=None, padding_mode='block', split='train', load_vocab=None,
+        c4=True
 ):
     """
     For a dataset, create a generator over (images, kwargs) pairs.
@@ -41,7 +42,24 @@ def load_data_text(
     elif data_args.experiment.startswith('random') and model is not None:
         print('loading initialized random embeddings. ')
 
-    if task_mode == 'roc' or task_mode == 'roc-aug' :
+    c4 = True
+    if c4:
+        from improved_diffusion.c4_dataset.create_dataset import create_unsupervised_dataset
+        from transformers import BertTokenizerFast
+        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+        dataset = create_unsupervised_dataset(split, config_path='improved_diffusion/c4_dataset/config.json', tokenizer=tokenizer)
+        loader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            num_workers=50,
+            shuffle=True,
+            drop_last=True
+        )
+        while True:
+            yield from loader
+        return
+
+    elif task_mode == 'roc' or task_mode == 'roc-aug' :
         training_data, model = get_corpus_rocstory(data_args, model, image_size,
                                             padding_mode=padding_mode, split=split,
                                             load_vocab=load_vocab)
