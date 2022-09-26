@@ -16,6 +16,8 @@ def create_c4_dataset(split):
     import os
     base_path = os.environ['C4_PATH']
     #base_path = "/home/gbartosh/nlp_models/data/c4/en"
+    if split == 'valid':
+        split = 'validation'
     data_files = {
         # "train": [f"{base_path}/c4-train.{idx:05d}-of-01024.json.gz" for idx in range(1024)],
         # "validation": [f"{base_path}/c4-validation.{idx:05d}-of-00008.json.gz" for idx in range(8)],

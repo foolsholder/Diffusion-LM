@@ -27,7 +27,7 @@ class IterableDataset(torch.utils.data.IterableDataset):
             index = torch.multinomial(input=torch.Tensor([self.current_weights]), num_samples=1).item()
             try:
                 x = next(self.iterators[index])['inputs']
-                yield torch.zeros(size=x.shape[0]), {'input_ids': x}
+                yield x
             except StopIteration:
                 self.current_weights[index] = 0
                 if np.sum(self.current_weights) == 0:

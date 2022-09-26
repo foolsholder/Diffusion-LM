@@ -47,7 +47,8 @@ def main():
 
     wandb.init(
         project=os.getenv("WANDB_PROJECT", "diffusion_lm"),
-        name=args.checkpoint_path,
+        name='bert_base_c4_bpe_a100_bs512'
+        #name=args.checkpoint_path,
     )
     wandb.config.update(args.__dict__, allow_val_change=True)
 
@@ -102,12 +103,8 @@ def main():
             model=model22,
         )
         next(data)
-        model2, tokenizer = load_models(args.modality, args.experiment, args.model_name_or_path, args.in_channel,
-                                        args.checkpoint_path, extra_args=args)
-        if args.modality == 'book' or args.use_bert_tokenizer == 'yes':
-            rev_tokenizer = tokenizer # BERT tokenizer BPE.
-        else:
-            rev_tokenizer = {v: k for k, v in tokenizer.items()}
+        #model2, tokenizer = load_models(args.modality, args.experiment, args.model_name_or_path, args.in_channel,
+                                        #args.checkpoint_path, extra_args=args)
 
         data_valid = load_data_text(
             data_dir=args.data_dir,
@@ -118,24 +115,14 @@ def main():
             task_mode=args.modality,
             padding_mode=args.padding_mode,  # block, pad
             split='valid',
-            load_vocab=rev_tokenizer,
-            model=model2,
+            #load_vocab=rev_tokenizer,
+            #model=model2,
         )
 
     # dist.barrier()
     # import time
     # while not os.path.exists(os.path.join(args.checkpoint_path, 'vocab.json')):
     #     time.sleep(1)
-    def get_mapping_func(args, diffusion, data):
-        model2, tokenizer = load_models(args.modality, args.experiment, args.model_name_or_path, args.in_channel,
-                                        args.checkpoint_path, extra_args=args)
-        model3 = get_weights(model2, args)
-        print(model3, model3.weight.requires_grad)
-        mapping_func = partial(compute_logp, args, model3.cuda())
-        diffusion.mapping_func = mapping_func
-        return mapping_func
-
-    get_mapping_func(args, diffusion, data)
 
     logger.log("training...")
     TrainLoop(

@@ -38,8 +38,10 @@ def load_models(modality, mode, model_name_or_path, emb_dim, file, extra_args=No
             else:
                 path_save_tokenizer = '{}/vocab.json'.format(file)
                 print(f'loading from {path_save_tokenizer}')
-                with open(path_save_tokenizer, 'r') as f:
-                    vocab = json.load(f)
+                #with open(path_save_tokenizer, 'r') as f:
+                #    vocab = json.load(f)
+                from transformers import BertTokenizerFast
+                vocab = BertTokenizerFast.from_pretrained('bert-base-uncased').vocab
                 print(len(vocab))
                 tokenizer = {v: k for k, v in vocab.items()}
             model = torch.nn.Embedding(len(tokenizer), emb_dim)

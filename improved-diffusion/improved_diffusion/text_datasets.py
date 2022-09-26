@@ -1,5 +1,4 @@
 # from PIL import Image
-# import blobfile as bf
 import numpy as np
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForCausalLM, AutoConfig, AutoTokenizer, default_data_collator, PreTrainedTokenizerFast, \
@@ -43,94 +42,19 @@ def load_data_text(
         print('loading initialized random embeddings. ')
 
     c4 = True
-    if c4:
-        from improved_diffusion.c4_dataset.create_dataset import create_unsupervised_dataset
-        from transformers import BertTokenizerFast
-        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
-        dataset = create_unsupervised_dataset(split, config_path='improved_diffusion/c4_dataset/config.json', tokenizer=tokenizer)
-        loader = DataLoader(
-            dataset,
-            batch_size=batch_size,
-            num_workers=50,
-            shuffle=True,
-            drop_last=True
-        )
-        while True:
-            yield from loader
-        return
-
-    elif task_mode == 'roc' or task_mode == 'roc-aug' :
-        training_data, model = get_corpus_rocstory(data_args, model, image_size,
-                                            padding_mode=padding_mode, split=split,
-                                            load_vocab=load_vocab)
-    elif task_mode == 'simple-wiki':
-        training_data, model = get_corpus_rocstory(data_args, model, image_size,
-                                            padding_mode=padding_mode, split=split,
-                                            load_vocab=load_vocab)
-
-    elif task_mode == 'e2e-tgt':
-        print('hello loading e2e-tgt. ')
-        training_data, model = get_corpus_rocstory(data_args, model, image_size,
-                                            padding_mode=padding_mode, split=split,
-                                            load_vocab=load_vocab)
-    elif task_mode == 'yelp':
-        print('hello loading yelp ')
-        training_data, model = get_corpus_rocstory(data_args, model, image_size,
-                                            padding_mode=padding_mode, split=split,
-                                            load_vocab=load_vocab)
-
-    elif task_mode == 'commonGen' or task_mode == 'commonGen-aug':
-        print('hello loading common-gen ')
-        training_data, model = get_corpus_rocstory(data_args, model, image_size,
-                                            padding_mode=padding_mode, split=split,
-                                            load_vocab=load_vocab)
-
-    elif task_mode == 'e2e':
-        training_data, model = get_corpus_rocstory(data_args, model, image_size,
-                                            padding_mode=padding_mode, split=split,
-                                            load_vocab=load_vocab)
-
-    elif task_mode == 'book':
-        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-        training_data, model = get_corpus_book(data_args, tokenizer, model, image_size,
-                                              padding_mode=padding_mode, split=split,)
-
-    if data_args.modality in ['roc-aug', 'roc', 'book', 'yelp', 'commonGen', 'commonGen-aug'] and data_args.cache_mode=='no':
-        dataset = TextDataset_NoCache(
-            training_data,
-            image_size,
-            data_args,
-            model_arch=data_args.model_arch,
-            model_emb=model
-        )
-    else:
-        dataset = TextDataset(
-            training_data,
-            image_size,
-            data_args,
-            model_arch=data_args.model_arch,
-        )
-
-    if deterministic:
-
-        data_loader = DataLoader(
-            dataset,
-            batch_size=batch_size,  # 20,
-            drop_last=True,
-            shuffle=False,
-            num_workers=1,
-        )
-
-    else:
-        data_loader = DataLoader(
-            dataset,
-            batch_size=batch_size,  # 20,
-            drop_last=True,
-            shuffle=True,
-            num_workers=1,
-        )
-    while True:
-        yield from data_loader
+    from improved_diffusion.c4_dataset.create_dataset import create_unsupervised_dataset
+    from transformers import BertTokenizerFast
+    tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+    dataset = create_unsupervised_dataset(split, config_path='improved_diffusion/c4_dataset/config.json', tokenizer=tokenizer)
+    loader = DataLoader(
+        dataset,
+        batch_size=512,
+        num_workers=50,
+        shuffle=True,
+        drop_last=True
+    )
+    iter_loader = iter(loader)
+    return iter_loader
 
 def helper_tokenize_encode_cond(sentence_lst, vocab_dict, model, seqlen, data_args):
     result_train_lst = []

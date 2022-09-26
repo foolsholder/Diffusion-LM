@@ -2,7 +2,7 @@ import copy
 import functools
 import os
 
-import blobfile as bf
+
 import numpy as np
 import torch as th
 import torch.cuda
@@ -137,10 +137,10 @@ class TrainLoop:
 
     def _load_optimizer_state(self):
         main_checkpoint = find_resume_checkpoint() or self.resume_checkpoint
-        opt_checkpoint = bf.join(
-            bf.dirname(main_checkpoint), f"opt{self.resume_step:06}.pt"
+        opt_checkpoint = os.path.join(
+            os.path.dirname(main_checkpoint), f"opt{self.resume_step:06}.pt"
         )
-        if bf.exists(opt_checkpoint):
+        if os.path.exists(opt_checkpoint):
             logger.log(f"loading optimizer state from checkpoint: {opt_checkpoint}")
             state_dict = torch.load(
                 opt_checkpoint, map_location='cpu'
@@ -156,13 +156,17 @@ class TrainLoop:
             not self.lr_anneal_steps
             or self.step + self.resume_step < self.lr_anneal_steps
         ):
-            batch, cond = next(self.data)
+            cond = next(self.data)
+            cond = {'input_ids': cond['input_ids']}
+            batch = torch.zeros(cond['input_ids'].shape[0])
             self.run_step(batch, cond)
             if self.step % self.log_interval == 0:
                 logger.dumpkvs()
             if self.eval_data is not None and self.step % self.eval_interval == 0:
-                batch_eval, cond_eval = next(self.eval_data)
-                self.forward_only(batch, cond)
+                cond_eval = next(self.eval_data)
+                cond_eval = {'input_ids': cond_eval['input_ids']}
+                batch_eval = torch.zeros(cond_eval['input_ids'].shape[0])
+                self.forward_only(batch_eval, cond_eval)
                 print('eval on validation set')
                 logger.dumpkvs()
             if self.step % self.save_interval == 0:
@@ -325,12 +329,11 @@ class TrainLoop:
                 filename = f"model{(self.step+self.resume_step):06d}.pt"
             else:
                 filename = f"ema_{rate}_{(self.step+self.resume_step):06d}.pt"
-            print('writing to', bf.join(get_blob_logdir(), filename))
-            print('writing to', bf.join(self.checkpoint_path, filename))
+            print('writing to', os.path.join(get_blob_logdir(), filename))
+            print('writing to', os.path.join(self.checkpoint_path, filename))
             # with bf.BlobFile(bf.join(get_blob_logdir(), filename), "wb") as f:
             #     th.save(state_dict, f)
-            with bf.BlobFile(bf.join(self.checkpoint_path, filename), "wb") as f: # DEBUG **
-                th.save(state_dict, f)
+            th.save(state_dict, os.path.join(self.checkpoint_path, filename))
 
         save_checkpoint(0, self.master_params)
         for rate, params in zip(self.ema_rate, self.ema_params):
@@ -384,8 +387,8 @@ def find_ema_checkpoint(main_checkpoint, step, rate):
     if main_checkpoint is None:
         return None
     filename = f"ema_{rate}_{(step):06d}.pt"
-    path = bf.join(bf.dirname(main_checkpoint), filename)
-    if bf.exists(path):
+    path = os.path.join(os.path.dirname(main_checkpoint), filename)
+    if os.path.exists(path):
         return path
     return None
 
