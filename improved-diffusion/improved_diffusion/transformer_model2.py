@@ -723,8 +723,24 @@ class TransformerNetModel2(nn.Module):
         if num_heads_upsample == -1:
             num_heads_upsample = num_heads
 
+        config = None
         if config is None:
-            config = AutoConfig.from_pretrained(config_name)
+            from transformers.models.bert.modeling_bert import BertConfig
+            _BERT_SMALL_PACAN = {
+                "hidden_size": 768,
+                "hidden_act": "gelu",
+                "initializer_range": 0.02,
+                "vocab_size": 30522,
+                "hidden_dropout_prob": 0.1,
+                "num_attention_heads": 8,
+                "type_vocab_size": 2,
+                "max_position_embeddings": 512,
+                "num_hidden_layers": 4,
+                "intermediate_size": 2048,
+                "attention_probs_dropout_prob": 0.1
+            }
+            config = BertConfig(**_BERT_SMALL_PACAN)
+            #config = AutoConfig.from_pretrained(config_name)
             config.hidden_dropout_prob = dropout
             # config.hidden_size = 512
 

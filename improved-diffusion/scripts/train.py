@@ -5,7 +5,7 @@ Train a diffusion model on images.
 import argparse
 import json, torch, os
 import numpy as np
-from improved_diffusion import dist_util, logger
+from improved_diffusion import logger
 from improved_diffusion.image_datasets import load_data
 from improved_diffusion.text_datasets import load_data_text
 from improved_diffusion.resample import create_named_schedule_sampler
@@ -27,7 +27,6 @@ import wandb
 def main():
     args = create_argparser().parse_args()
     set_seed(args.seed) 
-    dist_util.setup_dist() # DEBUG **
     logger.configure()
 
 
@@ -35,8 +34,7 @@ def main():
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-    model.to(dist_util.dev()) #  DEBUG **
-    # model.cuda() #  DEBUG **
+    model.cuda() #  DEBUG **
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
 
