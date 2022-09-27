@@ -47,7 +47,7 @@ def main():
 
     wandb.init(
         project=os.getenv("WANDB_PROJECT", "diffusion_lm"),
-        name='bert_base_c4_bpe_a100_bs512'
+        name='bert_base_c4_bpe_a100'
         #name=args.checkpoint_path,
     )
     wandb.config.update(args.__dict__, allow_val_change=True)

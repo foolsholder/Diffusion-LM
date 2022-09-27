@@ -48,7 +48,7 @@ def load_data_text(
     dataset = create_unsupervised_dataset(split, config_path='improved_diffusion/c4_dataset/config.json', tokenizer=tokenizer)
     loader = DataLoader(
         dataset,
-        batch_size=512,
+        batch_size=batch_size,
         num_workers=50,
         shuffle=True,
         drop_last=True

@@ -163,10 +163,10 @@ class TrainLoop:
             if self.step % self.log_interval == 0:
                 logger.dumpkvs()
             if self.eval_data is not None and self.step % self.eval_interval == 0:
-                cond_eval = next(self.eval_data)
-                cond_eval = {'input_ids': cond_eval['input_ids']}
-                batch_eval = torch.zeros(cond_eval['input_ids'].shape[0])
-                self.forward_only(batch_eval, cond_eval)
+                # cond_eval = next(self.eval_data)
+                # cond_eval = {'input_ids': cond_eval['input_ids']}
+                # batch_eval = torch.zeros(cond_eval['input_ids'].shape[0])
+                self.forward_only(batch, cond)
                 print('eval on validation set')
                 logger.dumpkvs()
             if self.step % self.save_interval == 0:
