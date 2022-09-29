@@ -140,6 +140,7 @@ def main():
 
     def estimate_model(num_texts):
         texts = generate_text(num_texts)
+        global model, model3, model2
         del model, model3, model2
 
         metric_bloom_fn = BloomMetric(device="cuda:0")
