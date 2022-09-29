@@ -136,11 +136,11 @@ def main():
             text = texts[ind:ind + batch_size]
             metric += metric_fn(text) * len(text)
             ind += batch_size
+            print(ind)
         return metric / len(texts)
 
     def estimate_model(num_texts):
         texts = generate_text(num_texts)
-        del model, model3, model2
 
         metric_bloom_fn = BloomMetric(device="cuda:0")
         metric_gpt_fn = GPTMetric(device="cuda:0")
