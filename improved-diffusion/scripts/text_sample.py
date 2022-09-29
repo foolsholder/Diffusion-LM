@@ -14,7 +14,7 @@ from improved_diffusion.rounding import rounding_func, load_models, load_tokeniz
 
 from improved_diffusion.test_util import get_weights, denoised_fn_round
 
-from improved_diffusion import dist_util, logger
+from improved_diffusion import logger
 from functools import partial
 from improved_diffusion.script_util import (
     NUM_CLASSES,
@@ -29,7 +29,7 @@ def main():
     set_seed(101)
     args = create_argparser().parse_args()
 
-    dist_util.setup_dist()
+    #dist_util.setup_dist()
     logger.configure()
 
     # load configurations.
@@ -49,8 +49,9 @@ def main():
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
+    import torch
     model.load_state_dict(
-        dist_util.load_state_dict(args.model_path, map_location="cpu")
+        torch.load(args.model_path, map_location="cpu")
     )
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
@@ -58,7 +59,8 @@ def main():
 
     # diffusion.rescale_timesteps = False  # DEBUG --> REMOVE
     print(diffusion.rescale_timesteps, 'a marker for whether we are in the debug mode')
-    model.to(dist_util.dev())
+    #model.to(dist_util.dev())
+    model.to('cuda:0')
     model.eval() # DEBUG
 
 
@@ -160,15 +162,16 @@ def main():
         #         word_lst_e2e.append(tokens)
 
 
-        gathered_samples = [th.zeros_like(sample) for _ in range(dist.get_world_size())]
-        dist.all_gather(gathered_samples, sample)  # gather not supported with NCCL
-        all_images.extend([sample.cpu().numpy() for sample in gathered_samples])
+        #gathered_samples = [th.zeros_like(sample) for _ in range(dist.get_world_size())]
+        #dist.all_gather(gathered_samples, sample)  # gather not supported with NCCL
+        #all_images.extend([sample.cpu().numpy() for sample in gathered_samples])
         if args.class_cond:
             gathered_labels = [
                 th.zeros_like(classes) for _ in range(dist.get_world_size())
             ]
             dist.all_gather(gathered_labels, classes)
             all_labels.extend([labels.cpu().numpy() for labels in gathered_labels])
+        all_images += [sample.cpu().numpy()]
         logger.log(f"created {len(all_images) * args.batch_size} samples")
 
     arr = np.concatenate(all_images, axis=0)
@@ -198,7 +201,7 @@ def main():
     if args.class_cond:
         label_arr = np.concatenate(all_labels, axis=0)
         label_arr = label_arr[: args.num_samples]
-    if dist.get_rank() == 0:
+    if True:
         shape_str = "x".join([str(x) for x in arr.shape])
         model_base_name = os.path.basename(os.path.split(args.model_path)[0]) + f'.{os.path.split(args.model_path)[1]}'
         out_path = os.path.join(args.out_dir, f"{model_base_name}.samples_{args.top_p}.npz")
@@ -209,7 +212,7 @@ def main():
         else:
             np.savez(out_path, arr)
 
-    dist.barrier()
+    #dist.barrier()
     logger.log("sampling complete")
 
     if args.verbose == 'yes':
