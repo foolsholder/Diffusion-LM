@@ -136,7 +136,6 @@ def main():
             text = texts[ind:ind + batch_size]
             metric += metric_fn(text) * len(text)
             ind += batch_size
-            print(ind)
         return metric / len(texts)
 
     def estimate_model(num_texts):
